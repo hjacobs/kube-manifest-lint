@@ -6,11 +6,35 @@ import jsonschema
 import yaml
 
 
+def additional_properties(data):
+    """Set additionalProperties=false on the object.
+
+    Copied from https://github.com/instrumenta/openapi2jsonschema/blob/master/openapi2jsonschema/util.py
+    This recreates the behaviour of kubectl at https://github.com/kubernetes/kubernetes/blob/225b9119d6a8f03fcbe3cc3d590c261965d928d0/pkg/kubectl/validation/schema.go#L312"""
+    new = {}
+    try:
+        for k, v in data.items():
+            new_v = v
+            if isinstance(v, dict):
+                if "properties" in v:
+                    if "additionalProperties" not in v:
+                        v["additionalProperties"] = False
+                new_v = additional_properties(v)
+            else:
+                new_v = v
+            new[k] = new_v
+        return new
+    except AttributeError:
+        return data
+
+
 class SchemaResolver(jsonschema.RefResolver):
     def resolve_remote(self, uri):
         """Only resolve from local directory."""
         with Path(uri).open() as fd:
             result = json.load(fd)
+        # make it a strict schema (do not allow additional properties)
+        result = additional_properties(result)
         if self.cache_remote:
             self.store[uri] = result
         return result
@@ -26,7 +50,7 @@ def main():
 
     lookup = {}
 
-    schema_dir = Path(f"../kubernetes-json-schema/{kubernetes_version}-local")
+    schema_dir = Path(__file__).parent / "schemas" / kubernetes_version
 
     for path in schema_dir.glob("*.json"):
         with path.open() as fd:
@@ -52,6 +76,9 @@ def main():
 
                 with schema_path.open() as fd:
                     schema = json.load(fd)
+
+                if schema["description"].startswith("DEPRECATED"):
+                    print("DEPRECATED")
 
                 resolver = SchemaResolver(
                     base_uri=str(schema_path.resolve()), referrer=schema

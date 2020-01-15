@@ -3,8 +3,13 @@ name = "kube-manifest-lint"
 version = "0.1.0"
 description = "Kubernetes manifest linter using JSON Schema"
 authors = ["Henning Jacobs <henning@jacobs1.de>"]
+license = "GPL-3.0+"
+packages = [
+    { include = "kube_manifest_lint" }
+]
 
-
+[tool.poetry.scripts]
+kube-manifest-lint = 'kube_manifest_lint:main.main'
 
 [tool.poetry.dependencies]
 python = "^3.6"
