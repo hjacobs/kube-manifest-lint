@@ -1,0 +1,14 @@
+*.egg-info
+__pycache__
+.coverage
+*.pyc
+*.pyo
+build/
+dist/
+.cache/
+.pytest_cache/
+.tox/
+docs/_build
+htmlcov/
+.mypy_cache
+*.swp

@@ -1,0 +1,6 @@
+- id: kube-manifest-lint
+  name: kube-manifest-lint
+  description: "Validate Kubernetes YAML manifests with JSON schema"
+  entry: kube-manifest-lint
+  language: python
+  types: [yaml]
