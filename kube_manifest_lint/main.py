@@ -2,8 +2,18 @@ import argparse
 import json
 from pathlib import Path
 
+import jsonschema
 import yaml
-from jsonschema import validate
+
+
+class SchemaResolver(jsonschema.RefResolver):
+    def resolve_remote(self, uri):
+        """Only resolve from local directory."""
+        with Path(uri).open() as fd:
+            result = json.load(fd)
+        if self.cache_remote:
+            self.store[uri] = result
+        return result
 
 
 def main():
@@ -16,9 +26,9 @@ def main():
 
     lookup = {}
 
-    for path in Path(
-        f"../kubernetes-json-schema/{kubernetes_version}-standalone-strict"
-    ).glob("*.json"):
+    schema_dir = Path(f"../kubernetes-json-schema/{kubernetes_version}-local")
+
+    for path in schema_dir.glob("*.json"):
         with path.open() as fd:
             schema = json.load(fd)
             if "properties" in schema:
@@ -43,5 +53,13 @@ def main():
                 with schema_path.open() as fd:
                     schema = json.load(fd)
 
-                result = validate(instance=instance, schema=schema)
+                resolver = SchemaResolver(
+                    base_uri=str(schema_path.resolve()), referrer=schema
+                )
+                result = jsonschema.validate(
+                    instance=instance,
+                    schema=schema,
+                    cls=jsonschema.Draft7Validator,
+                    resolver=resolver,
+                )
                 print(result)
