@@ -17,3 +17,7 @@ lint: install
 test: lint install
 	poetry run coverage run --source=kube_manifest_lint -m py.test -v
 	poetry run coverage report
+
+.PHONY: mirror
+mirror:
+	git push --mirror git@github.com:hjacobs/kube-manifest-lint.git
