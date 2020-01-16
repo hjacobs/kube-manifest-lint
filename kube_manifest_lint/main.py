@@ -71,8 +71,12 @@ def main():
         with path.open() as fd:
             for instance in yaml.safe_load_all(fd):
 
-                api_version = instance["apiVersion"]
-                kind = instance["kind"]
+                try:
+                    api_version = instance["apiVersion"]
+                    kind = instance["kind"]
+                except (TypeError, KeyError):
+                    # YAML file is apparently not a Kubernetes manifest, skip
+                    continue
 
                 schema_path = lookup[(api_version, kind)]
 
