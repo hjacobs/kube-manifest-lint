@@ -1,5 +1,6 @@
 import argparse
 import json
+import sys
 from pathlib import Path
 
 import jsonschema
@@ -65,6 +66,7 @@ def main():
                 if api_version and kind:
                     lookup[(api_version, kind)] = path
 
+    errors = []
     for path in args.files:
         with path.open() as fd:
             for instance in yaml.safe_load_all(fd):
@@ -78,7 +80,9 @@ def main():
                     schema = json.load(fd)
 
                 if schema["description"].startswith("DEPRECATED"):
-                    print("DEPRECATED")
+                    message = f"{api_version} {kind} is deprecated"
+                    errors.append(message)
+                    print(message)
 
                 resolver = SchemaResolver(
                     base_uri=str(schema_path.resolve()), referrer=schema
@@ -89,4 +93,11 @@ def main():
                     cls=jsonschema.Draft7Validator,
                     resolver=resolver,
                 )
-                print(result)
+                if result:
+                    errors.append(result)
+                    print(result)
+
+    if errors:
+        sys.exit(1)
+    else:
+        sys.exit(0)
