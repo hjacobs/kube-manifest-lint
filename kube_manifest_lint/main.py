@@ -41,11 +41,11 @@ class SchemaResolver(jsonschema.RefResolver):
         return result
 
 
-def main():
+def main(argv: list = None):
     parser = argparse.ArgumentParser()
     parser.add_argument("files", nargs="+", type=Path)
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     kubernetes_version = "v1.17.0"
 
