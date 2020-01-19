@@ -43,6 +43,7 @@ class SchemaResolver(jsonschema.RefResolver):
 
 def main(argv: list = None):
     parser = argparse.ArgumentParser()
+    parser.add_argument("--ignore-non-k8s-files", action="store_true")
     parser.add_argument("files", nargs="+", type=Path)
 
     args = parser.parse_args(argv)
@@ -66,6 +67,8 @@ def main(argv: list = None):
                 if api_version and kind:
                     lookup[(api_version, kind)] = path
 
+    exit_code = 0
+
     errors = []
     for path in args.files:
         with path.open() as fd:
@@ -75,10 +78,18 @@ def main(argv: list = None):
                     api_version = instance["apiVersion"]
                     kind = instance["kind"]
                 except (TypeError, KeyError):
+                    if not args.ignore_non_k8s_files:
+                        print("no Kubernetes manifest (apiVersion/kind not set)")
+                        exit_code |= 1
                     # YAML file is apparently not a Kubernetes manifest, skip
                     continue
 
-                schema_path = lookup[(api_version, kind)]
+                try:
+                    schema_path = lookup[(api_version, kind)]
+                except KeyError:
+                    print(f"schema for {api_version} {kind} not found")
+                    exit_code |= 2
+                    continue
 
                 with schema_path.open() as fd:
                     schema = json.load(fd)
@@ -86,22 +97,26 @@ def main(argv: list = None):
                 if schema["description"].startswith("DEPRECATED"):
                     message = f"{api_version} {kind} is deprecated"
                     errors.append(message)
+                    exit_code |= 4
                     print(message)
 
                 resolver = SchemaResolver(
                     base_uri=str(schema_path.resolve()), referrer=schema
                 )
-                result = jsonschema.validate(
-                    instance=instance,
-                    schema=schema,
-                    cls=jsonschema.Draft7Validator,
-                    resolver=resolver,
-                )
-                if result:
-                    errors.append(result)
-                    print(result)
+                try:
+                    jsonschema.validate(
+                        instance=instance,
+                        schema=schema,
+                        cls=jsonschema.Draft7Validator,
+                        resolver=resolver,
+                    )
+                except jsonschema.ValidationError as e:
+                    errors.append(e)
+                    exit_code |= 8
+                    print(e)
+                except jsonschema.SchemaError as e:
+                    errors.append(e)
+                    exit_code |= 16
+                    print(e)
 
-    if errors:
-        sys.exit(1)
-    else:
-        sys.exit(0)
+    sys.exit(exit_code)

@@ -13,3 +13,10 @@ Usage:
 pip3 install kube-manifest-lint
 kube-manifest-lint my-deployment.yaml
 ```
+
+## Exit Codes
+
+* 1: file is not a Kubernetes manifests
+* 2: schema for apiVersion/kind was not found
+* 4: schema is deprecated (e.g. using "extensions/v1beta1" instead of "apps/v1")
+* 8: schema validation failed
