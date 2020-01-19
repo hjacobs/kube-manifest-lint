@@ -1,0 +1,4 @@
+apiVersion: test.example.org/v1
+kind: SomeObject
+spec:
+  foo: bar

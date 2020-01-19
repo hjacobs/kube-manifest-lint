@@ -44,6 +44,7 @@ class SchemaResolver(jsonschema.RefResolver):
 def main(argv: list = None):
     parser = argparse.ArgumentParser()
     parser.add_argument("--ignore-non-k8s-files", action="store_true")
+    parser.add_argument("--ignore-unknown-schemas", action="store_true")
     parser.add_argument("files", nargs="+", type=Path)
 
     args = parser.parse_args(argv)
@@ -87,8 +88,9 @@ def main(argv: list = None):
                 try:
                     schema_path = lookup[(api_version, kind)]
                 except KeyError:
-                    print(f"schema for {api_version} {kind} not found")
-                    exit_code |= 2
+                    if not args.ignore_unknown_schemas:
+                        print(f"schema for {api_version} {kind} not found")
+                        exit_code |= 2
                     continue
 
                 with schema_path.open() as fd:

@@ -26,6 +26,20 @@ def test_ignore_non_kubernetes_yaml():
     assert e.value.code == 0
 
 
+def test_unknown_schema():
+    path = Path(__file__).parent / "manifests" / "unknown-schema.yaml"
+    with pytest.raises(SystemExit) as e:
+        main([str(path)])
+    assert e.value.code == 2
+
+
+def test_ignore_unknown_schema():
+    path = Path(__file__).parent / "manifests" / "unknown-schema.yaml"
+    with pytest.raises(SystemExit) as e:
+        main(["--ignore-unknown-schemas", str(path)])
+    assert e.value.code == 0
+
+
 def test_deprecated_deployment_yaml():
     path = Path(__file__).parent / "manifests" / "deployment-deprecated.yaml"
     with pytest.raises(SystemExit) as e:
