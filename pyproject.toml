@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "kube-manifest-lint"
-version = "0.1.3"
+version = "0.2.0"
 description = "Kubernetes manifest linter using JSON Schema"
 authors = ["Henning Jacobs <henning@jacobs1.de>"]
 license = "GPL-3.0+"
