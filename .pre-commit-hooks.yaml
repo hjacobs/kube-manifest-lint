@@ -2,5 +2,6 @@
   name: "Check Kubernetes manifests"
   description: "Validate Kubernetes YAML manifests with JSON schema"
   entry: kube-manifest-lint
+  args: [--ignore-non-k8s-files]
   language: python
   types: [yaml]

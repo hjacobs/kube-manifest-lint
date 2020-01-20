@@ -6,12 +6,25 @@
 ![License](https://img.shields.io/github/license/hjacobs/kube-manifest-lint)
 
 Validate Kubernetes YAML manifests against JSON schema.
+It will use the Kubernetes v1.17 schemas for validation by default.
 
 Usage:
 
 ```
 pip3 install kube-manifest-lint
 kube-manifest-lint my-deployment.yaml
+```
+
+## Pre Commit Hook
+
+You can use this tool as a [pre-commit](https://pre-commit.com/) in your git repository. Example `.pre-commit-config.yaml`:
+
+```yaml
+repos:
+  - repo: https://codeberg.org/hjacobs/kube-manifest-lint
+    rev: "0.2.0"
+    hooks:
+      - id: kube-manifest-lint
 ```
 
 ## Exit Codes
